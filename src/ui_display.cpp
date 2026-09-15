@@ -1,4 +1,5 @@
 #include "ui_display.h"
+#include "boot_logo.h"
 #include <stdio.h>
 #include <esp_heap_caps.h>
 
@@ -68,19 +69,9 @@ void initUiDisplay() {
     }
     canvas.setTextWrap(false);
 
-    // 5. Render Boot Splash Screen
-    canvas.fillSprite(TFT_BLACK);
-    canvas.setTextColor(TFT_GREEN, TFT_BLACK);
-    canvas.setFont(&fonts::Font4);
-    canvas.setTextDatum(middle_center);
-    canvas.drawString("CYD GPS TRACKER", 160, 70);
-
-    canvas.setTextColor(TFT_GREEN, TFT_BLACK);
-    canvas.setFont(&fonts::Font2);
-    canvas.drawString("Initializing Hardware...", 160, 120);
-    canvas.drawString("Connecting to GY-GPS6MV2...", 160, 150);
-    canvas.drawString("Pins: RX=GPIO22 | TX=GPIO27", 160, 180);
-    canvas.pushSprite(0, 0);
+    // 5. Play ZoneNet Pixel Art Animated Boot Logo (2.5 seconds)
+    Serial.println("[UI] Playing ZoneNet animated boot logo...");
+    playZoneNetBootAnimation(tft);
     Serial.println("[UI] initUiDisplay() COMPLETE");
 }
 
