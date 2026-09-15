@@ -10,6 +10,7 @@ static LGFX_Sprite canvas(&tft);
 #define RGB_RED_PIN   4
 #define RGB_GREEN_PIN 16
 #define RGB_BLUE_PIN  17
+#define BACKLIGHT_PIN 21
 
 static void setRgbLed(bool red, bool green, bool blue) {
     digitalWrite(RGB_RED_PIN, red ? LOW : HIGH);
@@ -18,17 +19,37 @@ static void setRgbLed(bool red, bool green, bool blue) {
 }
 
 void initUiDisplay() {
+    // 1. Explicitly enable TFT Backlight Pin
+    pinMode(BACKLIGHT_PIN, OUTPUT);
+    digitalWrite(BACKLIGHT_PIN, HIGH);
+
+    // 2. Initialize Status RGB LED
     pinMode(RGB_RED_PIN, OUTPUT);
     pinMode(RGB_GREEN_PIN, OUTPUT);
     pinMode(RGB_BLUE_PIN, OUTPUT);
     setRgbLed(true, false, false); // Red on init (Searching)
 
+    // 3. Initialize LovyanGFX Panel & Backlight PWM
     tft.init();
-    tft.setRotation(1); // Landscape 320x240
-    tft.setBrightness(200); // Backlight 0-255
+    tft.setRotation(1);     // Landscape 320x240
+    tft.setBrightness(255); // Max brightness
 
     canvas.createSprite(320, 240);
     canvas.setTextWrap(false);
+
+    // 4. Render Boot Splash Screen
+    canvas.fillSprite(TFT_NAVY);
+    canvas.setTextColor(TFT_GOLD, TFT_NAVY);
+    canvas.setFont(&fonts::Font4);
+    canvas.setTextDatum(middle_center);
+    canvas.drawString("CYD GPS TRACKER", 160, 70);
+
+    canvas.setTextColor(TFT_WHITE, TFT_NAVY);
+    canvas.setFont(&fonts::Font2);
+    canvas.drawString("Initializing Hardware...", 160, 120);
+    canvas.drawString("Connecting to GY-GPS6MV2...", 160, 150);
+    canvas.drawString("Pins: RX=GPIO22 | TX=GPIO27", 160, 180);
+    canvas.pushSprite(0, 0);
 }
 
 static void renderGridTelemetryMode(const GpsTelemetryData& telemetry) {
@@ -254,7 +275,7 @@ void updateUiDisplay(const GpsTelemetryData& telemetry) {
 }
 
 void handleTouchInput(int16_t touchX, int16_t touchY) {
-    if (touchX < 0 || touchY < 0) return;
+    if (touchX <= 0 || touchY <= 0) return;
 
     // Top Right Mode Switch Button (X: 240..320, Y: 0..30)
     if (touchX >= 240 && touchY <= 30) {

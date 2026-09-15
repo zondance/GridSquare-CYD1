@@ -16,7 +16,7 @@ public:
             auto cfg = _bus_instance.config();
             cfg.spi_host = HSPI_HOST;
             cfg.spi_mode = 0;
-            cfg.freq_write = 40000000;
+            cfg.freq_write = 27000000; // 27 MHz for stable ILI9341 initialization across all CYD batches
             cfg.freq_read  = 16000000;
             cfg.spi_3wire  = false;
             cfg.use_lock   = true;
@@ -38,6 +38,13 @@ public:
             cfg.panel_height     = 320;
             cfg.offset_x         = 0;
             cfg.offset_y         = 0;
+            cfg.offset_rotation  = 0;
+            cfg.dummy_read_pixel = 8;
+            cfg.dummy_read_bits  = 1;
+            cfg.readable         = true;
+            cfg.invert           = false;
+            cfg.rgb_order        = false;
+            cfg.dlen_16bit       = false;
             cfg.bus_shared       = false;
             _panel_instance.config(cfg);
         }
