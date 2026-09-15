@@ -69,7 +69,7 @@ void initGpsEngine(int rxPin, int txPin, int baud) {
 
     memset(&currentTelemetry, 0, sizeof(GpsTelemetryData));
     currentTelemetry.fixStatus = FIX_SEARCHING;
-    currentTelemetry.gridPrecision = 8; // Default 8-digit precision
+    currentTelemetry.gridPrecision = 10; // Always 10-digit precision
     currentTelemetry.timeZoneOffsetHours = -7; // Default PDT (UTC-7)
     strcpy(currentTelemetry.gridLocator, "Searching");
     strcpy(currentTelemetry.cardinalHeading, "N/A");
@@ -113,6 +113,10 @@ static void gpsTaskLoop(void* arg) {
                                     currentTelemetry.longitude, 
                                     currentTelemetry.gridLocator, 
                                     currentTelemetry.gridPrecision);
+                Serial.printf("[GPS] Grid: '%s' (precision=%u, lat=%.6f, lon=%.6f, sats=%u)\n",
+                              currentTelemetry.gridLocator, currentTelemetry.gridPrecision,
+                              currentTelemetry.latitude, currentTelemetry.longitude,
+                              (unsigned)currentTelemetry.satsLocked);
             } else {
                 currentTelemetry.fixStatus = FIX_SEARCHING;
                 strcpy(currentTelemetry.gridLocator, "Searching");

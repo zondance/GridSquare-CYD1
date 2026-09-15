@@ -41,5 +41,6 @@ void loop() {
         GpsTelemetryData telemetry;
         getTelemetrySnapshot(telemetry);
         updateUiDisplay(telemetry);
+        updateAutoBrightness();
     }
 }
