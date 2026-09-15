@@ -8,11 +8,13 @@ static unsigned long lastUiUpdate = 0;
 void setup() {
     Serial.begin(115200);
     delay(500);
-    Serial.println("\n--- ESP32 CYD GPS Grid Square Locator & Dashboard ---");
+    Serial.println("\n--- ESP32 CYD GPS Grid Square Locator ---");
+    Serial.printf("[System] Chip: %s Rev %d | %d MHz | Heap: %u bytes\n",
+                  ESP.getChipModel(), ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getFreeHeap());
 
     // 1. Initialize Display & UI
     initUiDisplay();
-    Serial.println("[System] LovyanGFX Display & Touch initialized.");
+    Serial.println("[System] Display initialized.");
 
     // 2. Initialize GPS Engine (Hardware UART2 on CN1: RX=GPIO 22, TX=GPIO 27)
     initGpsEngine(22, 27, 9600);

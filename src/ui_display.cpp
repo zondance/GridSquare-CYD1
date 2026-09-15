@@ -1,5 +1,6 @@
 #include "ui_display.h"
 #include <stdio.h>
+#include <esp_heap_caps.h>
 
 LGFX_ESP32_CYD tft;
 UiDisplayMode currentUiMode = UI_MODE_GRID;
@@ -19,6 +20,8 @@ static void setRgbLed(bool red, bool green, bool blue) {
 }
 
 void initUiDisplay() {
+    Serial.println("[UI] initUiDisplay() START");
+
     // 1. Explicitly enable TFT Backlight Pin
     pinMode(BACKLIGHT_PIN, OUTPUT);
     digitalWrite(BACKLIGHT_PIN, HIGH);
@@ -33,11 +36,36 @@ void initUiDisplay() {
     tft.init();
     tft.setRotation(1);     // Landscape 320x240
     tft.setBrightness(255); // Max brightness
+    Serial.printf("[UI] Panel ready: %dx%d, Heap free: %u, Largest block: %u\n",
+                  tft.width(), tft.height(), ESP.getFreeHeap(),
+                  heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
 
-    canvas.createSprite(320, 240);
+    // 4. Create sprite for double-buffered rendering
+    //    ESP32 without PSRAM cannot allocate a 153KB contiguous block for 16-bit 320x240.
+    //    Strategy: try 16-bit first (best quality), fall back to 8-bit (256 colors).
+    canvas.setPsram(true);
+    canvas.setColorDepth(16);
+    void* spriteResult = canvas.createSprite(320, 240);
+
+    if (spriteResult == nullptr) {
+        canvas.setPsram(false);
+        spriteResult = canvas.createSprite(320, 240);
+    }
+
+    if (spriteResult == nullptr) {
+        canvas.setColorDepth(8);
+        spriteResult = canvas.createSprite(320, 240);
+    }
+
+    if (spriteResult == nullptr) {
+        Serial.println("[UI] ERROR: All sprite allocations failed!");
+    } else {
+        Serial.printf("[UI] Sprite OK: depth=%d-bit, heap remaining: %u\n",
+                      canvas.getColorDepth(), ESP.getFreeHeap());
+    }
     canvas.setTextWrap(false);
 
-    // 4. Render Boot Splash Screen
+    // 5. Render Boot Splash Screen
     canvas.fillSprite(TFT_NAVY);
     canvas.setTextColor(TFT_GOLD, TFT_NAVY);
     canvas.setFont(&fonts::Font4);
@@ -50,6 +78,7 @@ void initUiDisplay() {
     canvas.drawString("Connecting to GY-GPS6MV2...", 160, 150);
     canvas.drawString("Pins: RX=GPIO22 | TX=GPIO27", 160, 180);
     canvas.pushSprite(0, 0);
+    Serial.println("[UI] initUiDisplay() COMPLETE");
 }
 
 static void renderGridTelemetryMode(const GpsTelemetryData& telemetry) {
